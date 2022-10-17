@@ -37,10 +37,16 @@ SELECT @@servername as [Server],
     'Next Start Date'= CONVERT(DATETIME, RTRIM(NULLIF(js.next_run_date, 0)) + ' '
         + STUFF(STUFF(REPLACE(STR(RTRIM(js.next_run_time),6,0),
         ' ','0'),3,0,':'),6,0,':')),
-    'Max Duration' = STUFF(STUFF(REPLACE(STR(maxdur.run_duration,7,0),
-        ' ','0'),4,0,':'),7,0,':'),
-    'Last Run Duration' = STUFF(STUFF(REPLACE(STR(lastrun.run_duration,7,0),
-        ' ','0'),4,0,':'),7,0,':'),
+    CASE
+       WHEN lastrun.run_duration > 235959
+           THEN CAST((CAST(LEFT(CAST(lastrun.run_duration AS VARCHAR), LEN(CAST(lastrun.run_duration AS VARCHAR)) - 4) AS INT) / 24) AS VARCHAR) + '.' + RIGHT('00' + CAST(CAST(LEFT(CAST(lastrun.run_duration AS VARCHAR), LEN(CAST(lastrun.run_duration AS VARCHAR)) - 4) AS INT) % 24 AS VARCHAR), 2) + ':' + STUFF(CAST(RIGHT(CAST(lastrun.run_duration AS VARCHAR), 4) AS VARCHAR(6)), 3, 0, ':')
+       ELSE STUFF(STUFF(RIGHT(REPLICATE('0', 6) + CAST(lastrun.run_duration AS VARCHAR(6)), 6), 3, 0, ':'), 6, 0, ':')
+       END AS [LastRunDuration (d.HH:MM:SS)],
+    CASE
+       WHEN maxdur.run_duration > 235959
+           THEN CAST((CAST(LEFT(CAST(maxdur.run_duration AS VARCHAR), LEN(CAST(maxdur.run_duration AS VARCHAR)) - 4) AS INT) / 24) AS VARCHAR) + '.' + RIGHT('00' + CAST(CAST(LEFT(CAST(maxdur.run_duration AS VARCHAR), LEN(CAST(maxdur.run_duration AS VARCHAR)) - 4) AS INT) % 24 AS VARCHAR), 2) + ':' + STUFF(CAST(RIGHT(CAST(maxdur.run_duration AS VARCHAR), 4) AS VARCHAR(6)), 3, 0, ':')
+       ELSE STUFF(STUFF(RIGHT(REPLICATE('0', 6) + CAST(maxdur.run_duration AS VARCHAR(6)), 6), 3, 0, ':'), 6, 0, ':')
+       END AS [MaxDuration (d.HH:MM:SS)],
     'Last Start Date' = CONVERT(DATETIME, RTRIM(lastrun.run_date) + ' '
         + STUFF(STUFF(REPLACE(STR(RTRIM(lastrun.run_time),6,0),
         ' ','0'),3,0,':'),6,0,':')),
@@ -64,4 +70,4 @@ LEFT OUTER JOIN
                          FROM dbo.sysjobhistory j2 
                          WHERE j2.job_id = j1.job_id)) lastrun
     ON j.job_id = lastrun.job_id
-ORDER BY [Job Name]
+ORDER BY [Job Name],[Job Category]
