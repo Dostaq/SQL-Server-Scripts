@@ -4,6 +4,7 @@ Go
 
 SELECT @@servername as [Server],
 	j.Name AS 'Job Name', 
+	sc.[name] as [Job Category],
     '"' + NULLIF(j.Description, 'No description available.') + '"' AS 'Description',
     SUSER_SNAME(j.owner_sid) AS 'Job Owner',
     (SELECT COUNT(step_id) FROM dbo.sysjobsteps WHERE job_id = j.job_id) AS 'Number of Steps',
@@ -47,6 +48,8 @@ SELECT @@servername as [Server],
 FROM dbo.sysjobs j
 LEFT OUTER JOIN dbo.sysjobschedules js
     ON j.job_id = js.job_id
+LEFT OUTER JOIN dbo.syscategories sc
+	on j.category_id = sc.category_id
 LEFT OUTER JOIN dbo.sysschedules s
     ON js.schedule_id = s.schedule_id 
 LEFT OUTER JOIN (SELECT job_id, max(run_duration) AS run_duration
