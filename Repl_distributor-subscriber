@@ -1,0 +1,41 @@
+/*****   DOSTAQ SHARIEF ADMSHARID01 *****/
+/*****   This code gives us the details of Publisher, Publication, run status, last action statement, time of action, delivery laterncy. *****/
+/*****   It ONLY FETCHES THE LAST ACTION as we are filtering with self join and a MAX function in Inner JOIN  *****/
+
+Use [Distribution]
+GO
+
+SELECT 
+publisher_db,
+publication,
+CASE [runstatus]
+	when 1 then 'Start'
+	when 2 then 'Succeed'
+	when 3 then 'In progress'
+	when 4 then 'Idle'
+	when 5 then 'Retry'
+	when 6 then 'Fail'
+end as 
+[Status],
+[comments],
+[time],
+[current_delivery_rate],
+([current_delivery_latency]/1000) as [Current_delivery_latency_Seconds],
+round([delivery_rate],2) as [Delivery_rate],
+([delivery_latency]/1000) as [delivery_latency_Seconds],
+[error_id]
+ 
+from MSdistribution_history DH 
+JOIN MSdistribution_agents DA on dh.agent_id = da.id
+
+INNER JOIN 
+(
+select agent_id,
+MAX([time]) as Last_status_time
+from MSdistribution_history dh1
+join MSdistribution_agents da1
+on da1.id = dh1.agent_id
+where subscriber_db <> 'virtual' -- and subscriber_db = 'HLREP'
+group by agent_id
+		 
+) as max_date on DH.time = max_date.Last_status_time and DH.agent_id = max_date.agent_id
