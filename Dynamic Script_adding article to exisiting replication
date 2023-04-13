@@ -1,0 +1,14 @@
+select 'exec sp_addarticle @publication          = '''+TABLE_CATALOG+'''
+     ,@article                            ='''+TABLE_NAME+'''
+     ,@source_owner                       =''dbo''
+     ,@source_object                      ='''+TABLE_NAME+'''
+     ,@destination_table                  ='''+TABLE_NAME+'''
+     ,@force_invalidate_snapshot          =1
+     ,@schema_option                      =0x000000000803509F'
+  from INFORMATION_SCHEMA.TABLES
+where TABLE_TYPE = 'BASE TABLE'
+and ( 
+TABLE_NAME like'%%'
+OR TABLE_NAME like'%%'
+)
+order by TABLE_NAME
