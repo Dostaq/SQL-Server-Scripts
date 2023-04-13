@@ -1,0 +1,4 @@
+use [distribution]
+select 'use '+ publisher_db + CHAR(13)+
+'exec sp_refreshsubscriptions 
+@publication=N'''+ publication + '''' from MSpublications
